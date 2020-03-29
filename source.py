@@ -110,5 +110,13 @@ def traceWork():
 
 #Main function
 #where all our functions calls will be done
+def main():
+    print("Starting project \n")
+    for i in sys.argv:
+        print(i, '\n')
+        sys.stdout.write(i)
+    print(sys.argv[0])
+
 if __name__ == "__main__":
+    main()
     traceWork()
