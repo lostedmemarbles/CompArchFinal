@@ -2,6 +2,7 @@
 
 import sys
 
+
  
 #Generic:                               Example:
 #Cache Size: *** KB                         Cache Size: 1024 KB  (<- This means 1 MB)
@@ -29,49 +30,10 @@ def RR():
 
 def traceWork():
 
-    #FIRST DETERMINE EXECUTEABLE INFORMATION
-    #Input paramaters from our exec file 
-    #1. –f <trace file name> [ name of text file with the trace ]
-    #2. –s <cache size in KB> [ 1 KB to 8 MB ]
-    #3. –b <block size> [ 4 bytes to 64 bytes ]
-    #4. –a <associativity> [ 1, 2, 4, 8, 16 ]
-    #5. –r <replacement policy> [ RR or RND or LRU for bonus points] 
-    #Exmaple of a exec command (the )
-    #Sim.exe –f trace1.txt –s 1024 –b 16 –a 2 –r RR 
-
     #trace through the command line input as a String
     # where we see each of those params
     #get the appropriate values
-    print("This doesn't do anything yet!")
-    filename = sys.argv[1]
-
-    openFile = open(filename, "r")
-
-    lines = openFile.readlines()
-    numBytesRead = 0
-    addressOfInstruction = ""
-    dataReadIngore = ""
-    i = 0
-
-    while i < len(lines):
-        line = lines[i].split()
-        print(line)
-        if lines[i] == "\n":
-            print("empty line")
-            i += 1
-            continue
-        if line[0] == "EIP":
-            numBytesRead = line[1][1:2]
-            print(numBytesRead)
-            addressOfInstruction = line[2]
-            print(addressOfInstruction)
-            dataReadIgnore = line[3:]
-            print(dataReadIgnore)
-        if line[0] == "dstM:":
-            print("do some other stuff")
-        i += 1
-    
-    openFile.close()
+    print('In TraceWork')
 
     #SECOND
     #TRACE FILE WORK
@@ -108,15 +70,108 @@ def traceWork():
     return
 
 
-#Main function
-#where all our functions calls will be done
+#Main function of obtaining command line arguments
+#Purpose:
+#   Parse through command line arguments to obtain neccessary information
+#Paramaters:
+#   N/A
+# Return:
+#    traceFileNameInput     <trace file name>
+#    cacheSizeInput         <cache size in KB> 
+#    blockSizeInput         <block size>
+#    associativityInput     <associativity>
+#    replacementInput       <replacement policy> 
 def main():
+
+
+    #FIRST DETERMINE EXECUTEABLE INFORMATION
+    #Input paramaters from our exec file 
+    #1. –f <trace file name> [ name of text file with the trace ]
+    #2. –s <cache size in KB> [ 1 KB to 8 MB ]
+    #3. –b <block size> [ 4 bytes to 64 bytes ]
+    #4. –a <associativity> [ 1, 2, 4, 8, 16 ]
+    #5. –r <replacement policy> [ RR or RND or LRU for bonus points] 
+    #Exmaple of a exec command (the )
+    #Sim.exe –f trace1.txt –s 1024 –b 16 –a 2 –r RR 
+
+
+
+    #initial check to see if we have enough command line arguments
+    if len(sys.argv) < 10:
+        print("Too few arguments, you entered less then 11 arguments", file=sys.stderr)
+        return
+    if  len(sys.argv) > 11:
+        print("Too many arguments, you entered more then 11 arguments", file=sys.stderr)
+        return
+
+    #for joe because his VS is stupid and doesn't wanna work correctly
+    argEx = ['code.py', '–f', 'trace1.txt', '–s', '1024', '–b', '16', '–a', '2', '–r', 'RR']
+    traceFileNameInput = ''
+    cacheSizeInput = ''
+    blockSizeInput = ''
+    associativityInput = ''
+    replacementInput = ''
+
+    #for everything else
     print("Starting project \n")
     for i in sys.argv:
-        print(i, '\n')
-        sys.stdout.write(i)
-    print(sys.argv[0])
+        if i == "–f":
+           traceFileNameInput = sys.argv[2]
+           print("file name: ", traceFileNameInput)
 
+        if i == "–s":
+            cacheSizeInput = sys.argv[4]
+            print("cache size: ", cacheSizeInput)
+
+        if i == "–b":
+            blockSizeInput = sys.argv[6]
+            print("block size is :",blockSizeInput )
+
+        if i == "–a":
+            associativityInput = sys.argv[8]
+            print("associativity is: ", associativityInput)
+
+        if i == "–r":
+            replacementInput = sys.argv[10]
+            print("Replacement is: ", replacementInput)
+    
+
+    
+
+    index = 0
+    #loop through argEx(use thes in the loop above, this is for me testing later)
+    #for val in argEx:
+        #print(val)
+        #print(val == "–r")
+
+   #     if val == "–f":
+    #       traceFileNameInput = argEx[index + 1]
+     #      print("file name: ", traceFileNameInput)
+
+      #  if val == "–s":
+       #     cacheSizeInput = argEx[index+1]
+       #     print("cache size: ", cacheSizeInput)
+
+#        if val == "–b":
+ #           blockSizeInput = argEx[index+1]
+  #          print("block size is :",blockSizeInput )
+
+   #     if val == "–a":
+    #        associativityInput = argEx[index+1]
+     #       print("associativity is: ", associativityInput)
+
+      #  if val == "–r":
+        #    replacementInput = argEx[index+1]
+       #     print("Replacement is: ", replacementInput)
+
+#        index = index +1
+
+
+    return traceFileNameInput, cacheSizeInput, blockSizeInput, associativityInput, replacementInput
+
+#Actual Main
 if __name__ == "__main__":
-    main()
+    traceFileNameInput, cacheSizeInput, blockSizeInput, associativityInput, replacementInput = main()
+    print("Return Values are: ", traceFileNameInput," ", cacheSizeInput," ", blockSizeInput, " ", associativityInput, " ", replacementInput)
+
     traceWork()
