@@ -1,0 +1,5 @@
+EIP (04): 7c809767 83 60 34 00 and dword [eax+0x34],0x0
+dstM: 00000000 -------- srcM: 00000000 -------- 
+    
+EIP (07): 7c80976b 8b 84 88 10 0e 00 00 mov eax,[eax+ecx*4+0xe10]
+dstM: 7ffdf034 00000000 srcM: 7ffdfe2c 901e8b00
