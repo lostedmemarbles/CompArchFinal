@@ -25,7 +25,7 @@ def Assosicativity():
 def RR():
     return
     
-def Cache_Calculation(byte_length, address, dst1, dst2, src1, src2):
+def Cache_Calculation(byte_length, address, dst1, dst2, src1, src2, i):
 
     
     #For each instruction, assign a CPI of 2 for the fetch.
@@ -35,7 +35,7 @@ def Cache_Calculation(byte_length, address, dst1, dst2, src1, src2):
     #If cache block is 16 bytes and data bus is 4 bytes (32 bits), then 4 reads are required resulting in 4 * 2 = 8 CPI. 
     #If a read wraps around, then the 2nd cache row accessed is independent of the first. It may be a hit/miss on its own. 
 
-    print("Example Calculation")
+    print("Example Calculation ", i)
     print("***** Cache Calculated Values *****") 
     print()
     print("Total # Blocks:                 65536") 
@@ -76,6 +76,7 @@ def trace_work(file_name):
             dst2 = 0
             src1 = 0
             src2 = 0
+            i = 0
 
             for line in trace_file:
 
@@ -101,23 +102,28 @@ def trace_work(file_name):
 
                 elif "".join(split_line[0:1]) == "dstM:":
                     
-                    tmp = "".join(split_line[1:2])
-                    if tmp == "00000000":   #ignore dst
+                    if "".join(split_line[1:2]) == "00000000":   #ignore dst
                         dst1 =0
+                    else:
+                        dst1 = hex(int("".join(split_line[1:2]),16))
+
+                    if "".join(split_line[2:3]) == "--------":
                         dst2 = 0
                     else:
-                        dst1 = hex(int(tmp,16))
                         dst2 = hex(int("".join(split_line[2:3]),16))
 
-                    tmp = "".join(split_line[4:5])
-                    if tmp == "00000000":   #ignore src
+                    if "".join(split_line[4:5]) == "00000000":   #ignore src
                         src1 = 0
-                        src2 = 0
                     else:
                         src1 = hex(int("".join(split_line[4:5]),16))
+
+                    if "".join(split_line[5:6]) == "--------":
+                        src2 = 0
+                    else:
                         src2 = hex(int("".join(split_line[5:6]),16))
                     
-                    Cache_Calculation(len,add,dst1,dst2,src1,src2)
+                    i = i+1
+                    Cache_Calculation(len,add,dst1,dst2,src1,src2,i)
                     #print(dst1," ",dst2," ",src1," ",src2)
 
                 #trace_file.readline()
@@ -183,6 +189,8 @@ def main():
     for i in sys.argv:
         if i == "-f":
            traceFileNameInput = sys.argv[2]
+           print("Cache Simulator - CS 3853 - Team XX")
+           print()
            print("Trace File: ",traceFileNameInput)
            print()
            print("***** Cache Input Parameters *****")
