@@ -1,8 +1,14 @@
 #!/usr/bin/env python3
+#Group 11
+#Ashley Marble
+#Joseph Daau
+#Cassandra Diaz
 
 import sys
 import array as arr 
  
+#MILESTONE 1
+
 #Generic:                               Example:
 #Cache Size: *** KB                         Cache Size: 1024 KB  (<- This means 1 MB)
 #Block Size: *** bytes                      Block Size: 16 bytes
@@ -18,34 +24,290 @@ import array as arr
 #Cache Hit Rate: *** %                      Cache Hit Rate: 96.2 %
 #CPI:  ***                                  CPI: 1.5 cycles/instruction 
 
-def Assosicativity():
+
+
+#For our simulation, reading memory requires 3 clock
+#cycles while reading the cache requires only 1.
+
+
+#For each instruction, assign a CPI of 2 for the fetch.
+#IF that instruction has either a source or destination dataaccess, add 2 CPI * number of reads required.
+#If it has both, the add 2 CPI * number of reads for source and 2CPI * number of reads for destination.
+# Number of reads is determined by data bus size and cache block size. 
+#If cache block is 16 bytes and data bus is 4 bytes (32 bits), then 4 reads are required resulting in 4 * 2 = 8 CPI. 
+#If a read wraps around, then the 2nd cache row accessed is independent of the first. It may be a hit/miss on its own. 
+
+
+#NEW!!
+#GLOBAL CLOCK OF TOTAL CYCLES WE WILL INCREMENT
+clockCycle = 0
+#if its a miss increment this clock as well
+cycleMissed = 0
+
+
+#NEW FUNCTION TO DO!!! 
+#function: AssosicativityReplace
+#purpose:
+#           replace in our cache array system basedon associativity type
+#param:
+#           replaceType                             what kind of replacement we are doing
+#return     
+#           nothing its pretty much a void function
+def AssosicativityReplace(replaceType):
+    #check what replacement type we have [RR(round robin, LRU(least recently used)] only need to impliment 2 and i'm unsure of RND
+
+    #if RR
+        #keep track from top to bottom which index you are replacing
+        #find which is the next cache to replace
+        #replace
+        #set up next variable you will be checking(this might need to be a global)
+    
+
+    #if LRU
+        #look for least recently used cache
+            #if look from the point we are wanting to replace
+            #see which was the least recently used value in a range,
+                    #look for a index that doesn't repeat
+        #replace    
+
+
     return
     
 
-def RR():
+#NEW FUNCTION TO DO!!! 
+#function: CacheWork
+#purpose:
+#       Take parts of the instrecution we read in and do cache work
+#       Processes both the EIP and dstM line we read in
+#Paramaters:
+#       indexSize                   size of our index in bits 
+#       tagsize                     size of our tag in bits                 
+#       instLen                     instruction length to read
+#       numericAddress              Current address we are at we wish to read from(EID)   
+#       dstMWriteAddress            next avaiable write memory(dstm)   
+#       srcMReadAddress             next vaiable point of read memory(srcM)
+#       instFetchTF                 1 if there was a instruction to fetch ie the read line was EIP
+#                                   0 if there wasn't a line to fetch ir: dstM line
+#       assocType                   How we wish to replace
+#       instLenREDO                 had to keep track of previous instruction's instLen for dstM and srcM(thought not sure if needed)
+#return:
+#       instLen                     0 -> both valid lines, no need to keep track of in the next iteration
+#                                   >0   -> need to keep track of for next iteration    
+def CacheWork(indexSize, tagsize, instLen, numericAddress, dstMWriteAddress, srcMReadAddress, assocType, instLenREDO):
+    #given a 32 bit bus, we can only access 4 bytes of instruction at a time
+
+    #if the instLen is > 4, we will have to do that instruction multiple times
+
+    #NOT SURE IF NEEDED
+    #if there is a empty dstM line, keep the instLen as a return value to be used in the 
+    #next iteration of this code 
+
+
+
+
+    #Based of the numericAddress, get the tag and index values
+
+    #loop by how many times we have to read 
+
+    #check if the index exists in the the first associativity
+
+        #WARNING, THIS PART MIGHT NEED TO BE EDITED LATER
+        
+        #if the index exists but the tag is different, check the other assoc table part to see if it exists
+        #if it doesn't exist its a miss
+        #a miss increments clock:(3 cycles * number of memory reads to populate cache block) 
+        # number of reads == CEILING ( block size / 4 )
+        #increment both clockCycle and cycleMissed
+
+        #IF THERE IS A NEED TO REPLACE
+        #(every associativity has the same index but diff tags, and we want to add 1 more which is larger then our associative range
+        #ie: we have 4 9BC indexs and want to add a 5th in a 4 associativty, we need to now replace)
+        #call AssosicativityReplace
+
+    #if its a hit, increment clock by one
+    #increment clockCycle
+    
+    #if there is a instruction we grabbed (EIP line), add 2 to clockCycle
+    
+    #else if not EIP Line, increment clockCycle by 1 because we are calculatnig a effective address
+    #these last two parts might be done at the same time cause of the fact we are reading both lines in
+
+
+
     return
+
+
+
+
+
+#NEW FUNCTION TO DO!
+#function: CreateCache
+#purpose:
+#       create a 2d array of our cache based off of associativity
+#Paramaters:
+#       associativity               associtivty type
+#       rows                        full length of rows(memory/block size) <-if this incorporates the memory/block size/associtivty
+#                                   skip the second comment
+#Return:
+#       2d array [index][# of tags]
+def CreateCache(associativity, rows):
+    #check what type of associativity we have [1,2,4,8,16]
+
+    #get number of rows by associtivit : rows(memory/block size) / associtivty
     
-def Cache_Calculation(byte_length, address, dst1, dst2, src1, src2, i):
+    #create 2d array[number of rows/associativity][associtivity]
+    #return the 2d array
+    return
+
+
+
+
+
+
+
+
+
+#function: canBeInt
+#purpose:
+#    check if value passed in is a int
+#param:
+#       inp           any value we wish to check
+#return:
+#       true          value is a int
+#       false         value is not a int
+def canBeInt(inp):
+    try:
+        int(inp)
+        return True
+    except ValueError:
+        return False
+
+
+#function:  getPower
+#purpose:
+#       get the power of 2 value of the number passed in
+#param:
+#       num             number we wish to find the power of
+#return:
+#       printThis       power of the number in 2
+#
+#Side note: Overcomplicated *Ashely :3
+def getPower(num):
+    binary = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+    two = 1
+    top = -1
+    i = 0
+    num = int(num)
+    while num > 0:
+        i = 0
+        two = 1
+        if (num % 2) == 1:
+            binary[-1] = 1
+            num -= 1
+            i += 1
+            two *= 2
+        while i < len(binary):
+            if two > num:
+                break
+            temp = num / two
+            if canBeInt(temp) == True:
+                topNum = two
+                topIndex = i
+            i += 1
+            two *= 2
+        num -= topNum
+        binary[-i] = 1
+    i = 0
+    string = ""
+    ones = 0
+    printThis = 0
+    for each in binary:
+        if each == 1:
+            ones += 1
+            printThis = (len(binary)-1) - i
+        i += 1
+        string += str(each)
+    if ones == 1:
+        return printThis
+
+
+
+#function: checkIfKB
+#purpose: 
+#           Checks to see if the value passed in is a KB
+#param:
+#           convert             number we wish to check
+#Return:
+#       str(int(kb)) + " KB"    size in KB if something is Larger then a KB
+#       convert                 value isn't larger thena  kilobyte              
+def checkIfKB(convert):
+    kb = convert / 1024
+    if kb >= 1:
+        return str(int(kb)) + " KB"
+    else: 
+        return convert
+
+
+#function: Cache_Calculation
+#purpose:
+#       calculate the return values to stdout
+#param:
+#    cacheSize          size of the cache in MB
+#    blockSize          size of our blocks in bytes
+#    assType            associativity type
+def Cache_Calculation(cacheSize, blockSize, assType):
+    
+    hitRate = 0.0
+    cpi = 0.0
+    unusedCache = 0.0
+    unusedCachePercent = 0.0
+    cost = 0.05 * cacheSize
+    cacheSizeTo2 = getPower(cacheSize) + 10 # plus 10 bc KB
+    offset = getPower(blockSize)
+    power = cacheSizeTo2 - offset
+    totalBlocks = (2**power)
+    indexSize = cacheSizeTo2 - (offset + getPower(assType))
+    totalIndicesBytes = 2**indexSize
+    tagSize = 32 - indexSize - offset
+    overheadMemoryBytes = assType * (1 + tagSize) * totalIndicesBytes / 8
+    overheadMemoryKB = overheadMemoryBytes / 1024
+    implementMemoryBytes = overheadMemoryBytes + 2**cacheSizeTo2
+    implementMemoryKB = implementMemoryBytes / 1024
 
     
-    #For each instruction, assign a CPI of 2 for the fetch.
-    #IF that instruction has either a source or destination dataaccess, add 2 CPI * number of reads required.
-    #If it has both, the add 2 CPI * number of reads for source and 2CPI * number of reads for destination.
-    # Number of reads is determined by data bus size and cache block size. 
-    #If cache block is 16 bytes and data bus is 4 bytes (32 bits), then 4 reads are required resulting in 4 * 2 = 8 CPI. 
-    #If a read wraps around, then the 2nd cache row accessed is independent of the first. It may be a hit/miss on its own. 
+    #milestone 1 Printout
+    print("***** Calculated Values *****") 
+    print("Total # Blocks:              ", checkIfKB(int(totalBlocks)), "(2^", str(power) + ")")
+    print("Tag Size:                    ", tagSize) 
+    print("Index Size:                  ", indexSize, "bits, Total Indices:", checkIfKB(totalIndicesBytes)) 
+    print("Total # Rows:                ", checkIfKB(totalIndicesBytes))
+    print("Overhead Memory Size:        ", "{:,}".format(int(overheadMemoryBytes)), "(or ","{:,}".format(int(overheadMemoryKB)),"KB)")
+    print("Implementation Memory Size:  ", "{:,}".format(int(implementMemoryBytes)),"bytes  (or ", "{:,}".format(int(implementMemoryKB)),"KB)")
+    #print("----- Results -----")
+    #print("Cache Hit Rate:              ", hitRate, " %")
+    #print("CPI:                         ", cpi, " cycles/instruction")
+    print("Cost:                        $" + str(cost))
+    #print("Unused Cache Space:          ", unusedCache, " KB / ", unusedCachePercent, "%")
+    
 
-    print("Example Calculation ", i)
-    print("***** Cache Calculated Values *****") 
-    print()
-    print("Total # Blocks:                 65536") 
-    print("Tag Size:                       13 bits") 
-    print("Index Size:                     15 bits, Total Rows: 32768") 
-    print("Total # Rows:                   32768") 
-    print("Overhead Size:                  114688 bytes")
-    print("Implementation Memory Size:     1136.00 KB  (1163264 bytes)") 
-    print("Cost:                           $56.80")
-    print()
+    #NEW!!
+    #milestone 2 Printout
+    #MILESTONE 2
+    #***** Cache Simulation Results *****
+    #Total Cache Accesses: 282168
+    #Cache Hits: 275383
+    #Cache Misses: 6785
+    #--- Compulsory Misses: 6625
+    #--- Conflict Misses: 160
+    #***** ***** CACHE MISS RATE: ***** *****
+    #Hit Rate: 97.5954%
+    #CPI: 4.14 Cycles/Instruction
+    #Unused Cache Space: 920.48 KB / 1024 KB = 89.89 % Waste: $46.02
+    #Unused Cache Blocks: 58911 / 65536 
+
+
+
+
 
     return
 
@@ -77,7 +339,7 @@ def trace_work(file_name):
             src1 = 0
             src2 = 0
             i = 0
-
+            onlyTo20 = 0
             for line in trace_file:
 
                 split_line = line.rstrip().split()
@@ -88,6 +350,8 @@ def trace_work(file_name):
 
                 if "".join(split_line[0:1]) == "EIP":
                     length =  "".join(split_line[1:2])
+                    if onlyTo20 < 20:
+                        print(str(split_line[2]) + ":", length[:-1])
                     len = int(length.replace('(','').replace(')','').replace(':',''))
                     add = hex(int("".join(split_line[2:3]),16))
                     #data = "".join(split_line[4:])
@@ -123,15 +387,23 @@ def trace_work(file_name):
                         src2 = hex(int("".join(split_line[5:6]),16))
                     
                     i = i+1
-                    Cache_Calculation(len,add,dst1,dst2,src1,src2,i)
+                    onlyTo20 += 1
+                    #Cache_Calculation(len,add,dst1,dst2,src1,src2,i)
                     #print(dst1," ",dst2," ",src1," ",src2)
+
+                    #NEW!!!!
+                    #ONCE WE FINISH READING THE SECOND LINE, WE NOW CALL CACHEWORK 
+
 
                 #trace_file.readline()
                 #len = int(length.replace('(','').replace(')','').replace(':',''))
                 #add = hex(int("".join(split_line[2:3]),16))
                 #print(len," ",add)
                 #Cache_Calculation(len, add)
+                #^Keeping that because not sure what this fully does 
 
+
+        #close the file once we have fully went through it
         trace_file.close()
 
     except IOError:
@@ -170,14 +442,14 @@ def main():
 
     #initial check to see if we have enough command line arguments
     if len(sys.argv) < 10:
-        print("Too few arguments, you entered less then 11 arguments", file=sys.stderr)
-        return
+        print("Too few arguments, you entered less then 11 arguments")
+        sys.exit()
     if  len(sys.argv) > 11:
-        print("Too many arguments, you entered more then 11 arguments", file=sys.stderr)
-        return
+        print("Too many arguments, you entered more then 11 arguments")
+        sys.exit()
 
-    #for joe because his VS is stupid and doesn't wanna work correctly
-    argEx = ['code.py', '–f', 'trace1.txt', '–s', '1024', '–b', '16', '–a', '2', '–r', 'RR']
+
+    #reutrn values that will be used in other functions
     traceFileNameInput = ''
     cacheSizeInput = ''
     blockSizeInput = ''
@@ -189,12 +461,9 @@ def main():
     for i in sys.argv:
         if i == "-f":
            traceFileNameInput = sys.argv[2]
-           print("Cache Simulator - CS 3853 - Team XX")
+           print("Cache Simulator CS 3853 Spring 2020 - Group #11")
            print()
-           print("Trace File: ",traceFileNameInput)
-           print()
-           print("***** Cache Input Parameters *****")
-           print()
+           print("Trace File:                   ",traceFileNameInput)
 
         if i == "-s":
             cacheSizeInput = sys.argv[4]
@@ -202,7 +471,7 @@ def main():
 
         if i == "-b":
             blockSizeInput = sys.argv[6]
-            print("Block Size :                 ",blockSizeInput )
+            print("Block Size:                  ",blockSizeInput )
 
         if i == "-a":
             associativityInput = sys.argv[8]
@@ -210,43 +479,17 @@ def main():
 
         if i == "-r":
             if sys.argv[10] ==  "RR" or sys.argv[10] == "rr":
-                print("Replacement Policy:          ", "Round Robin")
+                print("Replacement Policy:      ", "Round Robin")
             if sys.argv[10] ==  "RND" or sys.argv[10] == "rnd":
-                print("Replacement Policy:          ", "Random")
+                print("Replacement Policy:      ", "Random")
             if sys.argv[10] ==  "LRU" or sys.argv[10] == "lru":
-                print("Replacement Policy:          ", "Least Recently Used")
+                print("Replacement Policy:      ", "Least Recently Used")
             print()
+
+
+    #printout our cache calculations
+    Cache_Calculation(int(cacheSizeInput), int(blockSizeInput), int(associativityInput))
     
-
-    
-
-    index = 0
-    #loop through argEx(use thes in the loop above, this is for me testing later)
-    #for val in argEx:
-        #print(val)
-        #print(val == "–r")
-
-   #     if val == "–f":
-    #       traceFileNameInput = argEx[index + 1]
-     #      print("file name: ", traceFileNameInput)
-
-      #  if val == "–s":
-       #     cacheSizeInput = argEx[index+1]
-       #     print("cache size: ", cacheSizeInput)
-
-#        if val == "–b":
- #           blockSizeInput = argEx[index+1]
-  #          print("block size is :",blockSizeInput )
-
-   #     if val == "–a":
-    #        associativityInput = argEx[index+1]
-     #       print("associativity is: ", associativityInput)
-
-      #  if val == "–r":
-        #    replacementInput = argEx[index+1]
-       #     print("Replacement is: ", replacementInput)
-
-#        index = index +1
 
 
     return traceFileNameInput, cacheSizeInput, blockSizeInput, associativityInput, replacementInput
@@ -255,4 +498,8 @@ def main():
 if __name__ == "__main__":
     traceFileNameInput, cacheSizeInput, blockSizeInput, associativityInput, replacementInput = main()
     #print("Return Values are: ", traceFileNameInput," ", cacheSizeInput," ", blockSizeInput, " ", associativityInput, " ", replacementInput)
+
+    #NEW
+    #create our cache based off of associativity
+
     trace_work(traceFileNameInput)
