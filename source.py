@@ -5,7 +5,6 @@
 #Cassandra Diaz
 
 import sys
-import array as arr 
  
 #Generic:                               Example:
 #Cache Size: *** KB                         Cache Size: 1024 KB  (<- This means 1 MB)
@@ -112,6 +111,19 @@ def Cache_Calculation(cacheSize, blockSize, assType):
     #print("CPI:                         ", cpi, " cycles/instruction")
     print("Cost:                        $" + str(cost))
     #print("Unused Cache Space:          ", unusedCache, " KB / ", unusedCachePercent, "%")
+    # M2
+    print("***** CACHE SIMULATION RESULTS *****")
+    print("Total Cache Accesses: 282168")                                           # how many times you checked an address 
+    print("Cache Hits: 275489")                                                     # it was valid and tag matched 
+    print("Cache Misses: 6679")                                                     # it was either not valid or tag didn’t match
+    print("--- Compulsory Misses: 6656")                                            # it was not valid
+    print("--- Conflict Misses: 23")                                                # it was valid, tag did not match 
+    print("***** ***** CACHE HIT & MISS RATE: ***** *****")                         # (Hits * 100) / Total Accesses 
+    print("Hit Rate: 97.6330%")                                                     # 1 – Hit Rate 
+    print("Miss Rate: 2.3670%")                                                     # Number Cycles/Number Instructions 
+    print("CPI: 4.13 Cycles/Instruction")                                           # Unused KB = ( (TotalBlocks-Compulsory Misses) * (BlockSize+OverheadSize) ) / 1024 
+    print("Unused Cache Space: 462.19 KB / 580.00 KB = 79.69% Waste: $23.11")       # The 1024 KB below is the total cache size for this example 
+    print("Unused Cache Blocks: 26112 / 32768")                                     # Waste = COST/KB * Unused KB 
     
     #For each instruction, assign a CPI of 2 for the fetch.
     #IF that instruction has either a source or destination dataaccess, add 2 CPI * number of reads required.
@@ -149,8 +161,9 @@ def trace_work(file_name):
             dst2 = 0
             src1 = 0
             src2 = 0
-            i = 0
-            onlyTo20 = 0
+            #i = 0
+            size = 0
+           #onlyTo20 = 0
             for line in trace_file:
 
                 split_line = line.rstrip().split()
@@ -161,8 +174,8 @@ def trace_work(file_name):
 
                 if "".join(split_line[0:1]) == "EIP":
                     length =  "".join(split_line[1:2])
-                    if onlyTo20 < 20:
-                        print(str(split_line[2]) + ":", length[:-1])
+                   # if onlyTo20 < 20:
+                   #     print(str(split_line[2]) + ":", length[:-1])
                     len = int(length.replace('(','').replace(')','').replace(':',''))
                     add = hex(int("".join(split_line[2:3]),16))
                     #data = "".join(split_line[4:])
@@ -181,24 +194,28 @@ def trace_work(file_name):
                         dst1 =0
                     else:
                         dst1 = hex(int("".join(split_line[1:2]),16))
+                        size+=1
 
                     if "".join(split_line[2:3]) == "--------":
                         dst2 = 0
                     else:
                         dst2 = hex(int("".join(split_line[2:3]),16))
+                        size+=1
 
                     if "".join(split_line[4:5]) == "00000000":   #ignore src
                         src1 = 0
                     else:
                         src1 = hex(int("".join(split_line[4:5]),16))
+                        size+=1
 
                     if "".join(split_line[5:6]) == "--------":
                         src2 = 0
                     else:
                         src2 = hex(int("".join(split_line[5:6]),16))
+                        size+=1
                     
-                    i = i+1
-                    onlyTo20 += 1
+                    #i = i+1
+                    #onlyTo20 += 1
                     #Cache_Calculation(len,add,dst1,dst2,src1,src2,i)
                     #print(dst1," ",dst2," ",src1," ",src2)
 
