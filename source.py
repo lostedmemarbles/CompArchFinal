@@ -5,7 +5,8 @@
 #Cassandra Diaz
 
 import sys
-import array as arr  
+import array as arr 
+import random
 
 #For our simulation, reading memory requires 3 clock
 #cycles while reading the cache requires only 1.
@@ -33,6 +34,7 @@ TotalBlocks = 0
 Overhead = 0
 impKB = 0
 cost = 0
+rows = 0
 index = 0
 
 
@@ -47,6 +49,8 @@ index = 0
 def AssosicativityReplace(replaceType, value):
     #check what replacement type we have [RR(round robin, LRU(least recently used)] only need to impliment 2 and i'm unsure of RND
     global index
+    global rows
+
     if replaceType == "RR":
         
         #replace
@@ -55,16 +59,11 @@ def AssosicativityReplace(replaceType, value):
         if index == len(cache):
             index = 0
         else :
-            index+=1
-        #set up next variable you will be checking(this might need to be a global)
-    
+            index+=1   
 
-    #if replaceType == "LRU":
-        #look for least recently used cache
-        
-        #replace    
-
-
+    if replaceType == "RND":
+            index = random.randrange(0, rows)
+            cache[index][value] = value
     return
     
 
@@ -156,14 +155,14 @@ def CacheWork(indexSize, numericAddress, dstMWriteAddress, srcMReadAddress, asso
 #                                   skip the second comment
 #Return:
 #       2d array [index][# of tags]
-def CreateCache(associativity, row):  
-
+def CreateCache(associativity):  
+    global rows
     #create 2d array[number of rows/associativity][associtivity]
-    rows, cols = (int(row / associativity), associativity) 
+    rows, cols = (round(rows / associativity), associativity) 
     cols+=1
     cache = [[0]*cols]*rows
 
-    #print(cache)
+    #print(len(cache))
     return cache
 
 
@@ -300,7 +299,7 @@ def Cache_Calculation(cacheSize, blockSize, assType):
     print("Cost:                        $" + str(cost))
     #print("Unused Cache Space:          ", unusedCache, " KB / ", unusedCachePercent, "%")
     
-    return
+    return totalIndicesBytes
 #function: cacheCalc2
 #purpose:
 #       calculate the return values to stdout
@@ -519,7 +518,8 @@ def main():
 
 
     #printout our cache calculations
-    Cache_Calculation(int(cacheSizeInput), int(blockSizeInput), int(associativityInput))
+    global rows
+    rows = Cache_Calculation(int(cacheSizeInput), int(blockSizeInput), int(associativityInput))
     
 
 
@@ -528,8 +528,7 @@ def main():
 #Actual Main
 if __name__ == "__main__":
     traceFileName, cacheSize, blockSize, associativity, replacement = main()
-
+    random.seed(cacheSize)
     #create our cache based off of associativity
-    rows = int(cacheSize) / int(blockSize) / int(associativity)
-    cache = CreateCache(int(associativity), int(rows))
+    cache = CreateCache(int(associativity))
     trace_work(traceFileName, associativity)
