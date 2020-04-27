@@ -43,7 +43,7 @@ clockCycle = 0
 #if its a miss increment this clock as well
 cycleMissed = 0
 #cache
-#cache
+cache = [[0]*1]*1
 
 
 #NEW FUNCTION TO DO!!! 
@@ -90,31 +90,36 @@ def AssosicativityReplace(replaceType):
 #       assocType                   How we wish to replace
 #       instLenREDO                 had to keep track of previous instruction's instLen for dstM and srcM(thought not sure if needed)
 #return:
-#       instLen                     0 -> both valid lines, no need to keep track of in the next iteration
+#       instLenREDO                 0 -> both valid lines, no need to keep track of in the next iteration
 #                                   >0   -> need to keep track of for next iteration    
 def CacheWork(indexSize, numericAddress, dstMWriteAddress, srcMReadAddress, assocType, instLenREDO):
-    assocType = int(assocType)
-    row = int(1024 / 16 / 2)
-    #cache = [[0 for x in range(rows/assocType)] for y in range(assocType)]
 
-    rows, cols = (row, assocType) 
-    cache = [[0]*cols]*rows 
     #given a 32 bit bus, we can only access 4 bytes of instruction at a time
     #if the instLen is > 4, we will have to do that instruction multiple times
 
     #NOT SURE IF NEEDED
     #if there is a empty dstM line, keep the instLen as a return value to be used in the 
     #next iteration of this code 
-
-    print(substring(numericAddress,2,1)) 
-
-
+    
     #Based of the numericAddress, get the tag and index values
+    last = numericAddress[5:10:]
+    last  = "".join(last[1::])
+    index = hex(int(last,16))
+
+    if len(last) ==  3 :
+        index = hex(int(last+"0",16))
+    #print(numericAddress)
+    #print(index)
 
     #loop by how many times we have to read 
-    i = assocType/4
-    #check if the index exists in the the first associativity
-
+    if int(assocType) > 4:
+        i = int(assocType) / 4
+    else:
+        i = int(assocType)
+    
+    for x in range(int(i)):
+        #check if the index exists in the the first associativity
+        print("In loop: ",x) #for compile purpouses until code is made
         #WARNING, THIS PART MIGHT NEED TO BE EDITED LATER
         
         #if the index exists but the tag is different, check the other assoc table part to see if it exists
@@ -128,17 +133,17 @@ def CacheWork(indexSize, numericAddress, dstMWriteAddress, srcMReadAddress, asso
         #ie: we have 4 9BC indexs and want to add a 5th in a 4 associativty, we need to now replace)
         #call AssosicativityReplace
 
-    #if its a hit, increment clock by one
-    #increment clockCycle
+        #if its a hit, increment clock by one
+        #increment clockCycle
     
-    #if there is a instruction we grabbed (EIP line), add 2 to clockCycle
+        #if there is a instruction we grabbed (EIP line), add 2 to clockCycle
     
-    #else if not EIP Line, increment clockCycle by 1 because we are calculatnig a effective address
-    #these last two parts might be done at the same time cause of the fact we are reading both lines in
+        #else if not EIP Line, increment clockCycle by 1 because we are calculatnig a effective address
+        #these last two parts might be done at the same time cause of the fact we are reading both lines in
 
 
 
-    return
+    return instLenREDO
 
 
 
@@ -154,20 +159,13 @@ def CacheWork(indexSize, numericAddress, dstMWriteAddress, srcMReadAddress, asso
 #                                   skip the second comment
 #Return:
 #       2d array [index][# of tags]
-def CreateCache(associativity, rows):
-    #check what type of associativity we have [1,2,4,8,16]
-    #if associativity == 1 or associativity == 2 or associativity == 4 or associativity == 8 or associativity == 16:
-        #get number of rows by associtivit : rows(memory/block size) / associtivty
-        #cache = [[0 for x in range(rows/associativity)] for y in range(associativity)]
-    
+def CreateCache(associativity, row, increase):  
+
     #create 2d array[number of rows/associativity][associtivity]
-    cache = [[0 for x in range(rows/associativity)] for y in range(associativity)]
-    #return the 2d array
+    rows, cols = (int(row / associativity), associativity) 
+    cache = [[0]*cols]*rows
+
     return cache
-
-
-
-
 
 
 
@@ -326,12 +324,6 @@ def trace_work(file_name, associativityInput):
 
     #trace through the command line input as a String
     # where we see each of those params
-    #get the appropriate values
-    #print('In TraceWork')
-    #file_name = "trace1.txt"
-    #SECOND
-    #TRACE FILE WORK
-    #2 examples of Trace lines
 
     #EIP (04): 7c809767 83 60 34 00 and dword [eax+0x34],0x0
     #dstM: 00000000 -------- srcM: 00000000 -------- 
@@ -346,29 +338,21 @@ def trace_work(file_name, associativityInput):
             length = ""
             address = ""
             dst1 = 0
-            #dst2 = 0
             src1 = 0
-            #src2 = 0
-            #i = 0
-            #onlyTo20 = 0
             checker = 0
             instLenREDO = 0
 
             for line in trace_file:
 
                 split_line = line.rstrip().split()
-                #print(split_line)
                     #First line is instruction fetch line contains the data length (number of bytes read), 
                     #the address (a 32-bit hexadecimal number) and data (the machine code of the instruction). 
                     #you care about the length and the address
 
                 if "".join(split_line[0:1]) == "EIP":
                     length =  "".join(split_line[1:2])
-                    #if onlyTo20 < 20:
-                    #    print(str(split_line[2]) + ":", length[:-1])
                     len = int(length.replace('(','').replace(')','').replace(':',''))
                     add = hex(int("".join(split_line[2:3]),16))
-                    #data = "".join(split_line[4:])
                 
                 #second line the data access line shows addresses for destination memory “dstM” (i.e. the write address) and source memory
                 #“srcM” (i.e. the read address) and the data read. 
@@ -385,25 +369,11 @@ def trace_work(file_name, associativityInput):
                     else:
                         dst1 = hex(int("".join(split_line[1:2]),16))
 
-                    #if "".join(split_line[2:3]) == "--------":
-                    #    dst2 = 0
-                    #else:
-                    #    dst2 = hex(int("".join(split_line[2:3]),16))
-
                     if "".join(split_line[4:5]) == "00000000":   #ignore src
                         src1 = 0
                     else:
                         src1 = hex(int("".join(split_line[4:5]),16))
 
-                    #if "".join(split_line[5:6]) == "--------":
-                    #    src2 = 0
-                    #else:
-                    #    src2 = hex(int("".join(split_line[5:6]),16))
-                    
-                    #i = i+1
-                    #onlyTo20 += 1
-                    #Cache_Calculation(len,add,dst1,dst2,src1,src2,i)
-                    #print(dst1," ",dst2," ",src1," ",src2)
                     if dst1 == 0:
                         instLenREDO = len
                         checker = 1
@@ -412,13 +382,6 @@ def trace_work(file_name, associativityInput):
                     CacheWork(len, add, dst1, src1, associativityInput, instLenREDO)
                     #instLenREDO = 0
                     checker = 0
-
-                #trace_file.readline()
-                #len = int(length.replace('(','').replace(')','').replace(':',''))
-                #add = hex(int("".join(split_line[2:3]),16))
-                #print(len," ",add)
-                #Cache_Calculation(len, add)
-                #^Keeping that because not sure what this fully does 
 
 
         #close the file once we have fully went through it
@@ -515,8 +478,8 @@ def main():
 #Actual Main
 if __name__ == "__main__":
     traceFileNameInput, cacheSizeInput, blockSizeInput, associativityInput, replacementInput = main()
-    #print("Return Values are: ", traceFileNameInput," ", cacheSizeInput," ", blockSizeInput, " ", associativityInput, " ", replacementInput)
 
-    #NEW
     #create our cache based off of associativity
+    rows = int(cacheSizeInput) / int(blockSizeInput) / int(associativityInput)
+    cache = CreateCache(int(associativityInput), int(rows), 0)
     trace_work(traceFileNameInput, associativityInput)
