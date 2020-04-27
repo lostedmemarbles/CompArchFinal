@@ -6,28 +6,9 @@
 
 import sys
 import array as arr  
-#MILESTONE 1
-
-#Generic:                               Example:
-#Cache Size: *** KB                         Cache Size: 1024 KB  (<- This means 1 MB)
-#Block Size: *** bytes                      Block Size: 16 bytes
-#Associativity: ***                         Associativity: 2
-#Policy: RR or RND or LRU                   Policy: RR
-#----- Calculated Values -----
-#Total #Blocks: ***                         Total #Blocks: 64 KB (2^ 16)
-#Tag Size: *** bits                         Tag Size: 13 bits
-#Index Size: *** bits, Total Indices: ***   Index Size: 15 bits, Total Indices: 32 KB
-#Overhead Memory Size: ***                  Overhead Memory Size: 114,688 bytes (or 112 KB)
-#Implementation Memory Size: ***            Implementation Memory Size: 1,163,264 bytes (or 1136 KB)
-#----- Results -----
-#Cache Hit Rate: *** %                      Cache Hit Rate: 96.2 %
-#CPI:  ***                                  CPI: 1.5 cycles/instruction 
-
-
 
 #For our simulation, reading memory requires 3 clock
 #cycles while reading the cache requires only 1.
-
 
 #For each instruction, assign a CPI of 2 for the fetch.
 #IF that instruction has either a source or destination dataaccess, add 2 CPI * number of reads required.
@@ -35,7 +16,6 @@ import array as arr
 # Number of reads is determined by data bus size and cache block size. 
 #If cache block is 16 bytes and data bus is 4 bytes (32 bits), then 4 reads are required resulting in 4 * 2 = 8 CPI. 
 #If a read wraps around, then the 2nd cache row accessed is independent of the first. It may be a hit/miss on its own. 
-
 
 #NEW!!
 #GLOBAL CLOCK OF TOTAL CYCLES WE WILL INCREMENT
@@ -45,6 +25,14 @@ cycleMissed = 0
 #cache
 cache = [[0]*1]*1
 
+traceFileName = "" 
+cacheSize = 0 
+blockSize = 0 
+associativity = 0
+replacement = ""
+TotalBlocks = 0
+Overhead = 0
+cost = 0
 
 #NEW FUNCTION TO DO!!! 
 #function: AssosicativityReplace
@@ -279,6 +267,9 @@ def Cache_Calculation(cacheSize, blockSize, assType):
     implementMemoryBytes = overheadMemoryBytes + 2**cacheSizeTo2
     implementMemoryKB = implementMemoryBytes / 1024
 
+    # For M2
+    TotalBlocks = int(totalBlocks)
+    Overhead = int(overheadMemoryBytes)
     
     #milestone 1 Printout
     print("***** Calculated Values *****") 
@@ -294,9 +285,19 @@ def Cache_Calculation(cacheSize, blockSize, assType):
     print("Cost:                        $" + str(cost))
     #print("Unused Cache Space:          ", unusedCache, " KB / ", unusedCachePercent, "%")
     
+    return
+#function: cacheCalc2
+#purpose:
+#       calculate the return values to stdout
+#param:
+#    addressAmu         How many times an adress  was accessed
+#    valid              How many times it was valid and tag matched
+#    invalid            How many times it was not valid
+#    tagMiss            Tag did not match
+#    intructionAmu      lines read in the file
+def cacheCalc2(addressAmu, valid, invalid, tagMiss, intructionAmu):
 
     #NEW!!
-    #milestone 2 Printout
     #MILESTONE 2
     #print("***** Cache Simulation Results *****")                                  # how many times you checked an address
     #print("Total Cache Accesses: 282168")                                          # it was valid and tag matched
@@ -308,13 +309,39 @@ def Cache_Calculation(cacheSize, blockSize, assType):
     #print("Hit Rate: 97.5954%")                                                    # 1 – Hit Rate
     #print("CPI: 4.14 Cycles/Instruction")                                          # Number Cycles/Number Instructions 
    
-   # Unused KB = ( (TotalBlocks-Compulsory Misses) * (BlockSize+OverheadSize) ) / 1024
+    # Unused KB = ( (TotalBlocks-Compulsory Misses) * (BlockSize+OverheadSize) ) / 1024
     # The 1024 KB below is the total cache size for this example
     # Waste = COST/KB * Unused KB 
     #print("Unused Cache Space: 920.48 KB / 1024 KB = 89.89 % Waste: $46.02")       
     #print("Unused Cache Blocks: 58911 / 65536")                                    
 
-
+    print("***** Cache Simulation Results *****")                                   
+    # how many times you checked an address
+    print("Total Cache Accesses: ", addressAmu)                                     
+    # it was valid and tag matched
+    print("Cache Hits: ", valid)                                                    
+    # it was either not valid or tag didn’t match
+    print("Cache Misses: ", invalid+tagMiss)                                                
+    # it was not valid
+    print("--- Compulsory Misses: ", invalid)                                           
+    # it was valid, tag did not match 
+    print("--- Conflict Misses: ", tagMiss)             # might be wrong                                
+    print("***** ***** CACHE MISS RATE: ***** *****")
+    #(Hits * 100) / Total Accesses
+    hit = (valid *100) / addressAmu
+    print("Hit Rate: ", hit)                                                    
+    # 1 – Hit Rate
+    miss = 1 - hit
+    print("Miss Rate: ", miss)
+    print("CPI: ",clockCycle / intructionAmu," Cycles/Instruction")                                          # Number Cycles/Number Instructions 
+   
+    
+    unusedKB = ( (int(TotalBlocks)-invalid) * (int(blockSize)+int(Overhead)) ) / 1024
+    # The 1024 KB below is the total cache size for this example
+    # Waste = COST/KB * Unused KB 
+    percentage = 0
+    print("Unused Cache Space: ",unusedKB," KB / ",cacheSize," KB = ",percentage," % Waste: $",cost / int(cacheSize) * int(unusedKB))       
+    print("Unused Cache Blocks: 58911 / 65536")  
 
 
 
@@ -386,6 +413,7 @@ def trace_work(file_name, associativityInput):
 
         #close the file once we have fully went through it
         trace_file.close()
+        cacheCalc2(int(282168), int(275489), int(6656), int(23), int(10))
 
     except IOError:
         print('Error opening file or file does not exist')
@@ -477,9 +505,9 @@ def main():
 
 #Actual Main
 if __name__ == "__main__":
-    traceFileNameInput, cacheSizeInput, blockSizeInput, associativityInput, replacementInput = main()
+    traceFileName, cacheSize, blockSize, associativity, replacement = main()
 
     #create our cache based off of associativity
-    rows = int(cacheSizeInput) / int(blockSizeInput) / int(associativityInput)
-    cache = CreateCache(int(associativityInput), int(rows), 0)
-    trace_work(traceFileNameInput, associativityInput)
+    rows = int(cacheSize) / int(blockSize) / int(associativity)
+    cache = CreateCache(int(associativity), int(rows), 0)
+    trace_work(traceFileName, associativity)
