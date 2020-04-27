@@ -33,6 +33,7 @@ TotalBlocks = 0
 Overhead = 0
 impKB = 0
 cost = 0
+index = 0
 
 
 #NEW FUNCTION TO DO!!! 
@@ -43,21 +44,24 @@ cost = 0
 #           replaceType                             what kind of replacement we are doing
 #return     
 #           nothing its pretty much a void function
-def AssosicativityReplace(replaceType):
+def AssosicativityReplace(replaceType, value):
     #check what replacement type we have [RR(round robin, LRU(least recently used)] only need to impliment 2 and i'm unsure of RND
-
-    #if RR
-        #keep track from top to bottom which index you are replacing
-        #find which is the next cache to replace
+    global index
+    if replaceType == "RR":
+        
         #replace
+        cache[index][value] = value
+        #keep track from top to bottom which index you are replacing
+        if index == len(cache):
+            index = 0
+        else :
+            index+=1
         #set up next variable you will be checking(this might need to be a global)
     
 
-    #if LRU
+    #if replaceType == "LRU":
         #look for least recently used cache
-            #if look from the point we are wanting to replace
-            #see which was the least recently used value in a range,
-                    #look for a index that doesn't repeat
+        
         #replace    
 
 
