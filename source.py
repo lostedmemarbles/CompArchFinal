@@ -152,20 +152,12 @@ def CacheWork(indexSize, numericAddress, dstMWriteAddress, srcMReadAddress, asso
 #                                   skip the second comment
 #Return:
 #       2d array [index][# of tags]
-def CreateCache(associativity, row, increase):  
+def CreateCache(associativity, row):  
 
     #create 2d array[number of rows/associativity][associtivity]
-    if increase == 0:
-        rows, cols = (int(row / associativity), associativity) 
-        cols+=1
-        cache = [[0]*cols]*rows
-    else :
-        cols = len(cache[0])
-        tmp = [[0]*cols]*rows
-        for x in range(len(cache)):
-            for y in range(cache[x]):
-                tmp[x][y] = cache[x][y]
-        cache = tmp
+    rows, cols = (int(row / associativity), associativity) 
+    cols+=1
+    cache = [[0]*cols]*rows
 
     #print(cache)
     return cache
@@ -535,5 +527,5 @@ if __name__ == "__main__":
 
     #create our cache based off of associativity
     rows = int(cacheSize) / int(blockSize) / int(associativity)
-    cache = CreateCache(int(associativity), int(rows), 0)
+    cache = CreateCache(int(associativity), int(rows))
     trace_work(traceFileName, associativity)
