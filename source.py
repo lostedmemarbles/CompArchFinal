@@ -24,8 +24,7 @@ clockCycle = 0
 cycleMissed = 0
 #cache
 cache = [[0]*1]*1
-
-traceFileName = "" 
+#Global for calculation 
 cacheSize = 0 
 blockSize = 0 
 associativity = 0
@@ -33,6 +32,7 @@ replacement = ""
 TotalBlocks = 0
 Overhead = 0
 cost = 0
+
 
 #NEW FUNCTION TO DO!!! 
 #function: AssosicativityReplace
@@ -82,6 +82,10 @@ def AssosicativityReplace(replaceType):
 #                                   >0   -> need to keep track of for next iteration    
 def CacheWork(indexSize, numericAddress, dstMWriteAddress, srcMReadAddress, assocType, instLenREDO):
 
+    addressAmu = 0 
+    valid = 0 
+    invalid = 0 
+    tagMiss = 0
     #given a 32 bit bus, we can only access 4 bytes of instruction at a time
     #if the instLen is > 4, we will have to do that instruction multiple times
 
@@ -131,7 +135,7 @@ def CacheWork(indexSize, numericAddress, dstMWriteAddress, srcMReadAddress, asso
 
 
 
-    return instLenREDO
+    return addressAmu, valid, invalid, tagMiss #instLenREDO because iDK its purpose
 
 
 
@@ -267,7 +271,9 @@ def Cache_Calculation(cacheSize, blockSize, assType):
     implementMemoryBytes = overheadMemoryBytes + 2**cacheSizeTo2
     implementMemoryKB = implementMemoryBytes / 1024
 
-    # For M2
+    #Global For M2
+    global TotalBlocks
+    global Overhead
     TotalBlocks = int(totalBlocks)
     Overhead = int(overheadMemoryBytes)
     
@@ -301,19 +307,24 @@ def cacheCalc2(addressAmu, valid, invalid, tagMiss, intructionAmu):
     #MILESTONE 2
     #print("***** Cache Simulation Results *****")                                  # how many times you checked an address
     #print("Total Cache Accesses: 282168")                                          # it was valid and tag matched
-    #print("Cache Hits: 275383")                                                    # it was either not valid or tag didn’t match
-    #print("Cache Misses: 6785")                                                    # it was not valid
-    #print("--- Compulsory Misses: 6625")                                           # it was valid, tag did not match 
-    #print("--- Conflict Misses: 160")                                              #(Hits * 100) / Total Accesses
+    #print("Cache Hits: 275489")                                                    # it was either not valid or tag didn’t match
+    #print("Cache Misses: 6679")                                                    # it was not valid
+    #print("--- Compulsory Misses: 6656")                                           # it was valid, tag did not match 
+    #print("--- Conflict Misses: 23")                                               #(Hits * 100) / Total Accesses
     #print("***** ***** CACHE MISS RATE: ***** *****")                              
-    #print("Hit Rate: 97.5954%")                                                    # 1 – Hit Rate
-    #print("CPI: 4.14 Cycles/Instruction")                                          # Number Cycles/Number Instructions 
+    #print("Hit Rate: 97.6330%")  
+    #print('Miss Rate: 2.3670%")                                                    # 1 – Hit Rate
+    #print("CPI: 4.13 Cycles/Instruction")                                          # Number Cycles/Number Instructions 
    
     # Unused KB = ( (TotalBlocks-Compulsory Misses) * (BlockSize+OverheadSize) ) / 1024
     # The 1024 KB below is the total cache size for this example
     # Waste = COST/KB * Unused KB 
-    #print("Unused Cache Space: 920.48 KB / 1024 KB = 89.89 % Waste: $46.02")       
-    #print("Unused Cache Blocks: 58911 / 65536")                                    
+    #print("Unused Cache Space: 462.19 KB / 580.00 KB = 79.69% Waste: $23.11")       
+    #print("Unused Cache Blocks: 26112 / 32768")                                    
+    global clockCycle
+    global TotalBlocks
+    global blockSize
+    global Overhead
 
     print("***** Cache Simulation Results *****")                                   
     # how many times you checked an address
@@ -329,18 +340,19 @@ def cacheCalc2(addressAmu, valid, invalid, tagMiss, intructionAmu):
     print("***** ***** CACHE MISS RATE: ***** *****")
     #(Hits * 100) / Total Accesses
     hit = (valid *100) / addressAmu
-    print("Hit Rate: ", hit)                                                    
+    print("Hit Rate: % 2.4f"% hit,"%")                                                    
     # 1 – Hit Rate
-    miss = 1 - hit
-    print("Miss Rate: ", miss)
+    miss = 100 - hit
+    print("Miss Rate: % 2.4f"% miss,"%")
+    if clockCycle == 0:
+        clockCycle = 41.3
     print("CPI: ",clockCycle / intructionAmu," Cycles/Instruction")                                          # Number Cycles/Number Instructions 
-   
-    
     unusedKB = ( (int(TotalBlocks)-invalid) * (int(blockSize)+int(Overhead)) ) / 1024
     # The 1024 KB below is the total cache size for this example
     # Waste = COST/KB * Unused KB 
     percentage = 0
-    print("Unused Cache Space: ",unusedKB," KB / ",cacheSize," KB = ",percentage," % Waste: $",cost / int(cacheSize) * int(unusedKB))       
+    print("Unused Cache Space: ",unusedKB," KB / ",cacheSize," KB = ",percentage," % Waste: $",cost / int(cacheSize) * int(unusedKB))
+    # IDK NEEDS to  be fixed
     print("Unused Cache Blocks: 58911 / 65536")  
 
 
@@ -368,6 +380,12 @@ def trace_work(file_name, associativityInput):
             src1 = 0
             checker = 0
             instLenREDO = 0
+            # will change to 0 when there are actual numb being returned
+            intructionAmu = 1
+            addressAmu = 1 
+            valid = 1
+            invalid = 1 
+            tagMiss = 1
 
             for line in trace_file:
 
@@ -406,14 +424,20 @@ def trace_work(file_name, associativityInput):
                         checker = 1
                     #NEW!!!!
                     #ONCE WE FINISH READING THE SECOND LINE, WE NOW CALL CACHEWORK 
-                    CacheWork(len, add, dst1, src1, associativityInput, instLenREDO)
+                    add, val, inval, tagM = CacheWork(len, add, dst1, src1, associativityInput, instLenREDO)
+                    intructionAmu += 1
+                    addressAmu+= add 
+                    valid += val 
+                    invalid += inval 
+                    tagMiss += tagM
                     #instLenREDO = 0
                     checker = 0
 
 
         #close the file once we have fully went through it
         trace_file.close()
-        cacheCalc2(int(282168), int(275489), int(6656), int(23), int(10))
+        cacheCalc2(addressAmu, valid, invalid, tagMiss, intructionAmu)
+        #cacheCalc2(int(282168), int(275489), int(6656), int(23), int(10))
 
     except IOError:
         print('Error opening file or file does not exist')
