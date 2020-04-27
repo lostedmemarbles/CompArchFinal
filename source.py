@@ -339,11 +339,12 @@ def cacheCalc2(addressAmu, valid, invalid, tagMiss, intructionAmu):
     #TotalBlocks = 32768 
     #Overhead = 17
     #impKB = 580
+    #cost = 29
     unusedKB = ( (int(TotalBlocks)-invalid) * (((int(blockSize)*8)+int(Overhead)) / 8) ) / 1024
     # The 1024 KB below is the total cache size for this example
     # Waste = COST/KB * Unused KB 
     percentage = (unusedKB / impKB)*100
-    print("Unused Cache Space: %.2f"% unusedKB," KB / %.2f"% impKB," KB = %.2f"%percentage,"%"," Waste: $%.2f"% (cost /int(cacheSize)*int(unusedKB)) )
+    print("Unused Cache Space: %.2f"% unusedKB," KB / %.2f"% impKB," KB = %.2f"%percentage,"%"," Waste: $%.2f"% round((cost/impKB *float(unusedKB)),2) )
     print("Unused Cache Blocks: ",(int(TotalBlocks)-invalid)," / ", TotalBlocks)  
 
 
