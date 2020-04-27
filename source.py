@@ -31,6 +31,7 @@ associativity = 0
 replacement = ""
 TotalBlocks = 0
 Overhead = 0
+impKB = 0
 cost = 0
 
 
@@ -253,7 +254,7 @@ def checkIfKB(convert):
 #    assType            associativity type
 def Cache_Calculation(cacheSize, blockSize, assType):
     
-
+    global cost
     hitRate = 0.0
     cpi = 0.0
     unusedCache = 0.0
@@ -274,8 +275,10 @@ def Cache_Calculation(cacheSize, blockSize, assType):
     #Global For M2
     global TotalBlocks
     global Overhead
+    global impKB
     TotalBlocks = int(totalBlocks)
-    Overhead = int(overheadMemoryBytes)
+    Overhead = tagSize+1
+    impKB = implementMemoryBytes / 1024
     
     #milestone 1 Printout
     print("***** Calculated Values *****") 
@@ -300,31 +303,17 @@ def Cache_Calculation(cacheSize, blockSize, assType):
 #    valid              How many times it was valid and tag matched
 #    invalid            How many times it was not valid
 #    tagMiss            Tag did not match
-#    intructionAmu      lines read in the file
+#    intructionAmu      The times the dst and src were 0 (instrucctions read)
 def cacheCalc2(addressAmu, valid, invalid, tagMiss, intructionAmu):
 
     #NEW!!
     #MILESTONE 2
-    #print("***** Cache Simulation Results *****")                                  # how many times you checked an address
-    #print("Total Cache Accesses: 282168")                                          # it was valid and tag matched
-    #print("Cache Hits: 275489")                                                    # it was either not valid or tag didn’t match
-    #print("Cache Misses: 6679")                                                    # it was not valid
-    #print("--- Compulsory Misses: 6656")                                           # it was valid, tag did not match 
-    #print("--- Conflict Misses: 23")                                               #(Hits * 100) / Total Accesses
-    #print("***** ***** CACHE MISS RATE: ***** *****")                              
-    #print("Hit Rate: 97.6330%")  
-    #print('Miss Rate: 2.3670%")                                                    # 1 – Hit Rate
-    #print("CPI: 4.13 Cycles/Instruction")                                          # Number Cycles/Number Instructions 
-   
-    # Unused KB = ( (TotalBlocks-Compulsory Misses) * (BlockSize+OverheadSize) ) / 1024
-    # The 1024 KB below is the total cache size for this example
-    # Waste = COST/KB * Unused KB 
-    #print("Unused Cache Space: 462.19 KB / 580.00 KB = 79.69% Waste: $23.11")       
-    #print("Unused Cache Blocks: 26112 / 32768")                                    
+                                      
     global clockCycle
     global TotalBlocks
     global blockSize
     global Overhead
+    global cost
 
     print("***** Cache Simulation Results *****")                                   
     # how many times you checked an address
@@ -336,7 +325,7 @@ def cacheCalc2(addressAmu, valid, invalid, tagMiss, intructionAmu):
     # it was not valid
     print("--- Compulsory Misses: ", invalid)                                           
     # it was valid, tag did not match 
-    print("--- Conflict Misses: ", tagMiss)             # might be wrong                                
+    print("--- Conflict Misses: ", tagMiss)                                
     print("***** ***** CACHE MISS RATE: ***** *****")
     #(Hits * 100) / Total Accesses
     hit = (valid *100) / addressAmu
@@ -344,16 +333,18 @@ def cacheCalc2(addressAmu, valid, invalid, tagMiss, intructionAmu):
     # 1 – Hit Rate
     miss = 100 - hit
     print("Miss Rate: % 2.4f"% miss,"%")
-    if clockCycle == 0:
-        clockCycle = 41.3
+    #if clockCycle == 0:
+    #    clockCycle = 41.3
     print("CPI: ",clockCycle / intructionAmu," Cycles/Instruction")                                          # Number Cycles/Number Instructions 
-    unusedKB = ( (int(TotalBlocks)-invalid) * (int(blockSize)+int(Overhead)) ) / 1024
+    #TotalBlocks = 32768 
+    #Overhead = 17
+    #impKB = 580
+    unusedKB = ( (int(TotalBlocks)-invalid) * (((int(blockSize)*8)+int(Overhead)) / 8) ) / 1024
     # The 1024 KB below is the total cache size for this example
     # Waste = COST/KB * Unused KB 
-    percentage = 0
-    print("Unused Cache Space: ",unusedKB," KB / ",cacheSize," KB = ",percentage," % Waste: $",cost / int(cacheSize) * int(unusedKB))
-    # IDK NEEDS to  be fixed
-    print("Unused Cache Blocks: 58911 / 65536")  
+    percentage = (unusedKB / impKB)*100
+    print("Unused Cache Space: %.2f"% unusedKB," KB / %.2f"% impKB," KB = %.2f"%percentage,"%"," Waste: $%.2f"% (cost /int(cacheSize)*int(unusedKB)) )
+    print("Unused Cache Blocks: ",(int(TotalBlocks)-invalid)," / ", TotalBlocks)  
 
 
 
@@ -422,10 +413,10 @@ def trace_work(file_name, associativityInput):
                     if dst1 == 0:
                         instLenREDO = len
                         checker = 1
+                        intructionAmu += 1
                     #NEW!!!!
                     #ONCE WE FINISH READING THE SECOND LINE, WE NOW CALL CACHEWORK 
                     add, val, inval, tagM = CacheWork(len, add, dst1, src1, associativityInput, instLenREDO)
-                    intructionAmu += 1
                     addressAmu+= add 
                     valid += val 
                     invalid += inval 
