@@ -43,7 +43,7 @@ clockCycle = 0
 #if its a miss increment this clock as well
 cycleMissed = 0
 #cache
-cache
+#cache
 
 
 #NEW FUNCTION TO DO!!! 
@@ -93,21 +93,26 @@ def AssosicativityReplace(replaceType):
 #       instLen                     0 -> both valid lines, no need to keep track of in the next iteration
 #                                   >0   -> need to keep track of for next iteration    
 def CacheWork(indexSize, numericAddress, dstMWriteAddress, srcMReadAddress, assocType, instLenREDO):
-    #given a 32 bit bus, we can only access 4 bytes of instruction at a time
+    assocType = int(assocType)
+    row = int(1024 / 16 / 2)
+    #cache = [[0 for x in range(rows/assocType)] for y in range(assocType)]
 
+    rows, cols = (row, assocType) 
+    cache = [[0]*cols]*rows 
+    #given a 32 bit bus, we can only access 4 bytes of instruction at a time
     #if the instLen is > 4, we will have to do that instruction multiple times
 
     #NOT SURE IF NEEDED
     #if there is a empty dstM line, keep the instLen as a return value to be used in the 
     #next iteration of this code 
 
-
+    print(substring(numericAddress,2,1)) 
 
 
     #Based of the numericAddress, get the tag and index values
 
     #loop by how many times we have to read 
-
+    i = assocType/4
     #check if the index exists in the the first associativity
 
         #WARNING, THIS PART MIGHT NEED TO BE EDITED LATER
@@ -151,18 +156,9 @@ def CacheWork(indexSize, numericAddress, dstMWriteAddress, srcMReadAddress, asso
 #       2d array [index][# of tags]
 def CreateCache(associativity, rows):
     #check what type of associativity we have [1,2,4,8,16]
-    #if associativity == 1:
+    #if associativity == 1 or associativity == 2 or associativity == 4 or associativity == 8 or associativity == 16:
         #get number of rows by associtivit : rows(memory/block size) / associtivty
         #cache = [[0 for x in range(rows/associativity)] for y in range(associativity)]
-    #if associativity == 2:
-        #cache = [[0 for x in range(rows/associativity)] for y in range(associativity)]
-    #if associativity == 4:
-        #cache = [[0 for x in range(rows/associativity)] for y in range(associativity)]
-    #if associativity == 8:
-        #cache = [[0 for x in range(rows/associativity)] for y in range(associativity)]
-    #if associativity == 16:
-        #cache = [[0 for x in range(rows/associativity)] for y in range(associativity)]
-    
     
     #create 2d array[number of rows/associativity][associtivity]
     cache = [[0 for x in range(rows/associativity)] for y in range(associativity)]
@@ -267,6 +263,7 @@ def checkIfKB(convert):
 #    assType            associativity type
 def Cache_Calculation(cacheSize, blockSize, assType):
     
+
     hitRate = 0.0
     cpi = 0.0
     unusedCache = 0.0
@@ -522,5 +519,4 @@ if __name__ == "__main__":
 
     #NEW
     #create our cache based off of associativity
-
     trace_work(traceFileNameInput, associativityInput)
