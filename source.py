@@ -5,8 +5,7 @@
 #Cassandra Diaz
 
 import sys
-import array as arr 
- 
+import array as arr  
 #MILESTONE 1
 
 #Generic:                               Example:
@@ -43,6 +42,8 @@ import array as arr
 clockCycle = 0
 #if its a miss increment this clock as well
 cycleMissed = 0
+#cache
+cache
 
 
 #NEW FUNCTION TO DO!!! 
@@ -81,8 +82,6 @@ def AssosicativityReplace(replaceType):
 #       Processes both the EIP and dstM line we read in
 #Paramaters:
 #       indexSize                   size of our index in bits 
-#       tagsize                     size of our tag in bits                 
-#       instLen                     instruction length to read
 #       numericAddress              Current address we are at we wish to read from(EID)   
 #       dstMWriteAddress            next avaiable write memory(dstm)   
 #       srcMReadAddress             next vaiable point of read memory(srcM)
@@ -93,7 +92,7 @@ def AssosicativityReplace(replaceType):
 #return:
 #       instLen                     0 -> both valid lines, no need to keep track of in the next iteration
 #                                   >0   -> need to keep track of for next iteration    
-def CacheWork(indexSize, tagsize, instLen, numericAddress, dstMWriteAddress, srcMReadAddress, assocType, instLenREDO):
+def CacheWork(indexSize, numericAddress, dstMWriteAddress, srcMReadAddress, assocType, instLenREDO):
     #given a 32 bit bus, we can only access 4 bytes of instruction at a time
 
     #if the instLen is > 4, we will have to do that instruction multiple times
@@ -152,12 +151,23 @@ def CacheWork(indexSize, tagsize, instLen, numericAddress, dstMWriteAddress, src
 #       2d array [index][# of tags]
 def CreateCache(associativity, rows):
     #check what type of associativity we have [1,2,4,8,16]
-
-    #get number of rows by associtivit : rows(memory/block size) / associtivty
+    #if associativity == 1:
+        #get number of rows by associtivit : rows(memory/block size) / associtivty
+        #cache = [[0 for x in range(rows/associativity)] for y in range(associativity)]
+    #if associativity == 2:
+        #cache = [[0 for x in range(rows/associativity)] for y in range(associativity)]
+    #if associativity == 4:
+        #cache = [[0 for x in range(rows/associativity)] for y in range(associativity)]
+    #if associativity == 8:
+        #cache = [[0 for x in range(rows/associativity)] for y in range(associativity)]
+    #if associativity == 16:
+        #cache = [[0 for x in range(rows/associativity)] for y in range(associativity)]
+    
     
     #create 2d array[number of rows/associativity][associtivity]
+    cache = [[0 for x in range(rows/associativity)] for y in range(associativity)]
     #return the 2d array
-    return
+    return cache
 
 
 
@@ -293,17 +303,21 @@ def Cache_Calculation(cacheSize, blockSize, assType):
     #NEW!!
     #milestone 2 Printout
     #MILESTONE 2
-    #***** Cache Simulation Results *****
-    #Total Cache Accesses: 282168
-    #Cache Hits: 275383
-    #Cache Misses: 6785
-    #--- Compulsory Misses: 6625
-    #--- Conflict Misses: 160
-    #***** ***** CACHE MISS RATE: ***** *****
-    #Hit Rate: 97.5954%
-    #CPI: 4.14 Cycles/Instruction
-    #Unused Cache Space: 920.48 KB / 1024 KB = 89.89 % Waste: $46.02
-    #Unused Cache Blocks: 58911 / 65536 
+    #print("***** Cache Simulation Results *****")                                  # how many times you checked an address
+    #print("Total Cache Accesses: 282168")                                          # it was valid and tag matched
+    #print("Cache Hits: 275383")                                                    # it was either not valid or tag didn’t match
+    #print("Cache Misses: 6785")                                                    # it was not valid
+    #print("--- Compulsory Misses: 6625")                                           # it was valid, tag did not match 
+    #print("--- Conflict Misses: 160")                                              #(Hits * 100) / Total Accesses
+    #print("***** ***** CACHE MISS RATE: ***** *****")                              
+    #print("Hit Rate: 97.5954%")                                                    # 1 – Hit Rate
+    #print("CPI: 4.14 Cycles/Instruction")                                          # Number Cycles/Number Instructions 
+   
+   # Unused KB = ( (TotalBlocks-Compulsory Misses) * (BlockSize+OverheadSize) ) / 1024
+    # The 1024 KB below is the total cache size for this example
+    # Waste = COST/KB * Unused KB 
+    #print("Unused Cache Space: 920.48 KB / 1024 KB = 89.89 % Waste: $46.02")       
+    #print("Unused Cache Blocks: 58911 / 65536")                                    
 
 
 
@@ -311,7 +325,7 @@ def Cache_Calculation(cacheSize, blockSize, assType):
 
     return
 
-def trace_work(file_name):
+def trace_work(file_name, associativityInput):
 
     #trace through the command line input as a String
     # where we see each of those params
@@ -335,11 +349,14 @@ def trace_work(file_name):
             length = ""
             address = ""
             dst1 = 0
-            dst2 = 0
+            #dst2 = 0
             src1 = 0
-            src2 = 0
-            i = 0
-            onlyTo20 = 0
+            #src2 = 0
+            #i = 0
+            #onlyTo20 = 0
+            checker = 0
+            instLenREDO = 0
+
             for line in trace_file:
 
                 split_line = line.rstrip().split()
@@ -350,8 +367,8 @@ def trace_work(file_name):
 
                 if "".join(split_line[0:1]) == "EIP":
                     length =  "".join(split_line[1:2])
-                    if onlyTo20 < 20:
-                        print(str(split_line[2]) + ":", length[:-1])
+                    #if onlyTo20 < 20:
+                    #    print(str(split_line[2]) + ":", length[:-1])
                     len = int(length.replace('(','').replace(')','').replace(':',''))
                     add = hex(int("".join(split_line[2:3]),16))
                     #data = "".join(split_line[4:])
@@ -371,29 +388,33 @@ def trace_work(file_name):
                     else:
                         dst1 = hex(int("".join(split_line[1:2]),16))
 
-                    if "".join(split_line[2:3]) == "--------":
-                        dst2 = 0
-                    else:
-                        dst2 = hex(int("".join(split_line[2:3]),16))
+                    #if "".join(split_line[2:3]) == "--------":
+                    #    dst2 = 0
+                    #else:
+                    #    dst2 = hex(int("".join(split_line[2:3]),16))
 
                     if "".join(split_line[4:5]) == "00000000":   #ignore src
                         src1 = 0
                     else:
                         src1 = hex(int("".join(split_line[4:5]),16))
 
-                    if "".join(split_line[5:6]) == "--------":
-                        src2 = 0
-                    else:
-                        src2 = hex(int("".join(split_line[5:6]),16))
+                    #if "".join(split_line[5:6]) == "--------":
+                    #    src2 = 0
+                    #else:
+                    #    src2 = hex(int("".join(split_line[5:6]),16))
                     
-                    i = i+1
-                    onlyTo20 += 1
+                    #i = i+1
+                    #onlyTo20 += 1
                     #Cache_Calculation(len,add,dst1,dst2,src1,src2,i)
                     #print(dst1," ",dst2," ",src1," ",src2)
-
+                    if dst1 == 0:
+                        instLenREDO = len
+                        checker = 1
                     #NEW!!!!
                     #ONCE WE FINISH READING THE SECOND LINE, WE NOW CALL CACHEWORK 
-
+                    CacheWork(len, add, dst1, src1, associativityInput, instLenREDO)
+                    #instLenREDO = 0
+                    checker = 0
 
                 #trace_file.readline()
                 #len = int(length.replace('(','').replace(')','').replace(':',''))
@@ -502,4 +523,4 @@ if __name__ == "__main__":
     #NEW
     #create our cache based off of associativity
 
-    trace_work(traceFileNameInput)
+    trace_work(traceFileNameInput, associativityInput)
