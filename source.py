@@ -110,9 +110,9 @@ def CacheWork(indexSize, numericAddress, dstMWriteAddress, srcMReadAddress, asso
     else:
         i = int(assocType)
     
-    for x in range(int(i)):
+   # for x in range(int(i)):
         #check if the index exists in the the first associativity
-        print("In loop: ",x) #for compile purpouses until code is made
+   #     print("In loop: ",x) #for compile purpouses until code is made
         #WARNING, THIS PART MIGHT NEED TO BE EDITED LATER
         
         #if the index exists but the tag is different, check the other assoc table part to see if it exists
@@ -155,15 +155,11 @@ def CacheWork(indexSize, numericAddress, dstMWriteAddress, srcMReadAddress, asso
 def CreateCache(associativity, row, increase):  
 
     #create 2d array[number of rows/associativity][associtivity]
-    rows, cols = (int(row / associativity), associativity) 
-    cache = [[0]*cols]*rows
+    cols = associativity
+    #unsure about the columns - marble
+    cache = [[0]*cols]*row
 
     return cache
-
-
-
-
-
 #function: canBeInt
 #purpose:
 #    check if value passed in is a int
@@ -178,8 +174,6 @@ def canBeInt(inp):
         return True
     except ValueError:
         return False
-
-
 #function:  getPower
 #purpose:
 #       get the power of 2 value of the number passed in
@@ -226,9 +220,6 @@ def getPower(num):
         string += str(each)
     if ones == 1:
         return printThis
-
-
-
 #function: checkIfKB
 #purpose: 
 #           Checks to see if the value passed in is a KB
@@ -259,7 +250,6 @@ def Cache_Calculation(cacheSize, blockSize, assType):
     cpi = 0.0
     unusedCache = 0.0
     unusedCachePercent = 0.0
-    cost = 0.05 * cacheSize
     cacheSizeTo2 = getPower(cacheSize) + 10 # plus 10 bc KB
     offset = getPower(blockSize)
     power = cacheSizeTo2 - offset
@@ -271,6 +261,7 @@ def Cache_Calculation(cacheSize, blockSize, assType):
     overheadMemoryKB = overheadMemoryBytes / 1024
     implementMemoryBytes = overheadMemoryBytes + 2**cacheSizeTo2
     implementMemoryKB = implementMemoryBytes / 1024
+    cost = 0.05 * implementMemoryKB
 
     #Global For M2
     global TotalBlocks
@@ -282,19 +273,14 @@ def Cache_Calculation(cacheSize, blockSize, assType):
     
     #milestone 1 Printout
     print("***** Calculated Values *****") 
-    print("Total # Blocks:              ", checkIfKB(int(totalBlocks)), "(2^", str(power) + ")")
-    print("Tag Size:                    ", tagSize) 
-    print("Index Size:                  ", indexSize, "bits, Total Indices:", checkIfKB(totalIndicesBytes)) 
-    print("Total # Rows:                ", checkIfKB(totalIndicesBytes))
-    print("Overhead Memory Size:        ", "{:,}".format(int(overheadMemoryBytes)), "(or ","{:,}".format(int(overheadMemoryKB)),"KB)")
-    print("Implementation Memory Size:  ", "{:,}".format(int(implementMemoryBytes)),"bytes  (or ", "{:,}".format(int(implementMemoryKB)),"KB)")
-    #print("----- Results -----")
-    #print("Cache Hit Rate:              ", hitRate, " %")
-    #print("CPI:                         ", cpi, " cycles/instruction")
-    print("Cost:                        $" + str(cost))
-    #print("Unused Cache Space:          ", unusedCache, " KB / ", unusedCachePercent, "%")
-    
-    return
+    print("Total # Blocks:              ", totalBlocks, "(2^", str(power) + ")")
+    print("Tag Size:                    ", tagSize,"bits") 
+    print("Index Size:                  ", indexSize, "bits") 
+    print("Total # Rows:                ", totalIndicesBytes)
+    print("Overhead Memory Size:        ", int(overheadMemoryBytes), "(or ","{:,}".format(int(overheadMemoryKB)),"KB)")
+    print("Implementation Memory Size:  ", "{:,}".format(int(implementMemoryKB)),"KB  <", "{:,}".format(int(implementMemoryBytes)),"bytes>")
+    print("Cost:                        $" + str("{:.2f}".format(cost)))
+    return totalIndicesBytes
 #function: cacheCalc2
 #purpose:
 #       calculate the return values to stdout
@@ -339,12 +325,11 @@ def cacheCalc2(addressAmu, valid, invalid, tagMiss, intructionAmu):
     #TotalBlocks = 32768 
     #Overhead = 17
     #impKB = 580
-    #cost = 29
     unusedKB = ( (int(TotalBlocks)-invalid) * (((int(blockSize)*8)+int(Overhead)) / 8) ) / 1024
     # The 1024 KB below is the total cache size for this example
     # Waste = COST/KB * Unused KB 
     percentage = (unusedKB / impKB)*100
-    print("Unused Cache Space: %.2f"% unusedKB," KB / %.2f"% impKB," KB = %.2f"%percentage,"%"," Waste: $%.2f"% round((cost/impKB *float(unusedKB)),2) )
+    print("Unused Cache Space: %.2f"% unusedKB," KB / %.2f"% impKB," KB = %.2f"%percentage,"%"," Waste: $%.2f"% (cost /int(cacheSize)*int(unusedKB)) )
     print("Unused Cache Blocks: ",(int(TotalBlocks)-invalid)," / ", TotalBlocks)  
 
 
@@ -513,17 +498,17 @@ def main():
 
 
     #printout our cache calculations
-    Cache_Calculation(int(cacheSizeInput), int(blockSizeInput), int(associativityInput))
+    rows = Cache_Calculation(int(cacheSizeInput), int(blockSizeInput), int(associativityInput))
     
 
 
-    return traceFileNameInput, cacheSizeInput, blockSizeInput, associativityInput, replacementInput
+    return rows, traceFileNameInput, cacheSizeInput, blockSizeInput, associativityInput, replacementInput
 
 #Actual Main
 if __name__ == "__main__":
-    traceFileName, cacheSize, blockSize, associativity, replacement = main()
+    rows, traceFileName, cacheSize, blockSize, associativity, replacement = main()
 
     #create our cache based off of associativity
-    rows = int(cacheSize) / int(blockSize) / int(associativity)
-    cache = CreateCache(int(associativity), int(rows), 0)
+    #rows = int(cacheSize) / int(blockSize) / int(associativity)
+    cache = CreateCache(int(associativity), rows, 0)
     trace_work(traceFileName, associativity)
