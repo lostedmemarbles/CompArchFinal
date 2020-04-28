@@ -35,8 +35,8 @@ Overhead = 0
 impKB = 0
 cost = 0
 rows = 0
-index = 0
-
+indexSize = 0
+tagSize = 0
 
 #NEW FUNCTION TO DO!!! 
 #function: AssosicativityReplace
@@ -84,12 +84,20 @@ def AssosicativityReplace(replaceType, value):
 #return:
 #       instLenREDO                 0 -> both valid lines, no need to keep track of in the next iteration
 #                                   >0   -> need to keep track of for next iteration    
-def CacheWork(indexSize, numericAddress, dstMWriteAddress, srcMReadAddress, assocType, instLenREDO):
-
-    addressAmu = 0 
+def CacheWork(searchSize, numericAddress, dstMWriteAddress, srcMReadAddress, assocType, instLenREDO):
+    addressAmu = 0
+    global indexSize
+    global clockCycle
+    global tagSize
     valid = 0 
     invalid = 0 
     tagMiss = 0
+    hits = 0
+    global cache
+    miss = 0
+    conflicts = 0
+    compulsory = 0
+    twoLines = False
     #given a 32 bit bus, we can only access 4 bytes of instruction at a time
     #if the instLen is > 4, we will have to do that instruction multiple times
 
@@ -101,21 +109,49 @@ def CacheWork(indexSize, numericAddress, dstMWriteAddress, srcMReadAddress, asso
     last = numericAddress[5:10:]
     last  = "".join(last[1::])
     index = hex(int(last,16))
-
+    get_bin = lambda binary, n: format(binary, 'b').zfill(n)
+    addressBin = get_bin(int(numericAddress, 16), 32)
+    tagBits = addressBin[0:(tagSize)]
+    indexBits = addressBin[tagSize:tagSize+indexSize]
+    indexInt = int(indexBits, 2)
+    tagHex = hex(int(tagBits, 2))
     if len(last) ==  3 :
         index = hex(int(last+"0",16))
-    #print(numericAddress)
-    #print(index)
-
+    if int(assocType) < int(searchSize):
+        twoLines = True
+    while indexInt >= len(cache):
+        indexInt -= len(cache)
     #loop by how many times we have to read 
-    if int(assocType) > 4:
-        i = int(assocType) / 4
-    else:
-        i = int(assocType)
-    
-    for x in range(int(i)):
+    i = 0
+    columnInd = 1;
+    for x in range(int(searchSize)):
+        addressAmu += 1
+        if int(columnInd) >= len(cache[indexInt]):
+            clockCycle += 1
+            columnInd = 1
+            indexInt += 1
+            if indexInt >= len(cache):
+                indexInt -= len(cache)
+        
+        if cache[indexInt][columnInd] == 1:
+            if cache[indexInt][columnInd + 1] == tagHex:
+                hits += 1
+                clockCycle += 1
+            else:
+                conflicts += 1
+                clockCycle += 3
+        else:
+            clockCycle += 3
+            compulsory += 1
+            cache[indexInt][columnInd] = 1
+            cache[indexInt][columnInd + 1] = tagHex
+            break;
+        columnInd += 2
+
+    #if srcM not 00:
+        
         #check if the index exists in the the first associativity
-        print("In loop: ",x) #for compile purpouses until code is made
+        #print("In loop: ",x) #for compile purpouses until code is made
         #WARNING, THIS PART MIGHT NEED TO BE EDITED LATER
         
         #if the index exists but the tag is different, check the other assoc table part to see if it exists
@@ -139,7 +175,7 @@ def CacheWork(indexSize, numericAddress, dstMWriteAddress, srcMReadAddress, asso
 
 
 
-    return addressAmu, valid, invalid, tagMiss #instLenREDO because iDK its purpose
+    return addressAmu, hits, compulsory, conflicts #instLenREDO because iDK its purpose
 
 
 
@@ -161,14 +197,7 @@ def CreateCache(associativity):
     rows, cols = (round(rows / associativity), associativity) 
     cols+=1
     cache = [[0]*cols]*rows
-
-    #print(len(cache))
     return cache
-
-
-
-
-
 #function: canBeInt
 #purpose:
 #    check if value passed in is a int
@@ -259,6 +288,8 @@ def checkIfKB(convert):
 #    assType            associativity type
 def Cache_Calculation(cacheSize, blockSize, assType):
     
+    global indexSize
+    global tagSize
     global cost
     hitRate = 0.0
     cpi = 0.0
@@ -293,11 +324,7 @@ def Cache_Calculation(cacheSize, blockSize, assType):
     print("Total # Rows:                ", checkIfKB(totalIndicesBytes))
     print("Overhead Memory Size:        ", "{:,}".format(int(overheadMemoryBytes)), "(or ","{:,}".format(int(overheadMemoryKB)),"KB)")
     print("Implementation Memory Size:  ", "{:,}".format(int(implementMemoryBytes)),"bytes  (or ", "{:,}".format(int(implementMemoryKB)),"KB)")
-    #print("----- Results -----")
-    #print("Cache Hit Rate:              ", hitRate, " %")
-    #print("CPI:                         ", cpi, " cycles/instruction")
     print("Cost:                        $" + str(cost))
-    #print("Unused Cache Space:          ", unusedCache, " KB / ", unusedCachePercent, "%")
     
     return totalIndicesBytes
 #function: cacheCalc2
@@ -309,7 +336,7 @@ def Cache_Calculation(cacheSize, blockSize, assType):
 #    invalid            How many times it was not valid
 #    tagMiss            Tag did not match
 #    intructionAmu      The times the dst and src were 0 (instrucctions read)
-def cacheCalc2(addressAmu, valid, invalid, tagMiss, intructionAmu):
+def cacheCalc2(addressAmu, valid,misses, compulsory, conflicts, intructionAmu):
 
     #NEW!!
     #MILESTONE 2
@@ -326,11 +353,11 @@ def cacheCalc2(addressAmu, valid, invalid, tagMiss, intructionAmu):
     # it was valid and tag matched
     print("Cache Hits: ", valid)                                                    
     # it was either not valid or tag didn’t match
-    print("Cache Misses: ", invalid+tagMiss)                                                
+    print("Cache Misses: ", misses)                         
     # it was not valid
-    print("--- Compulsory Misses: ", invalid)                                           
+    print("--- Compulsory Misses: ", compulsory)                                           
     # it was valid, tag did not match 
-    print("--- Conflict Misses: ", tagMiss)                                
+    print("--- Conflict Misses: ", conflicts)                                
     print("***** ***** CACHE MISS RATE: ***** *****")
     #(Hits * 100) / Total Accesses
     hit = (valid *100) / addressAmu
@@ -340,17 +367,17 @@ def cacheCalc2(addressAmu, valid, invalid, tagMiss, intructionAmu):
     print("Miss Rate: % 2.4f"% miss,"%")
     #if clockCycle == 0:
     #    clockCycle = 41.3
-    print("CPI: ",clockCycle / intructionAmu," Cycles/Instruction")                                          # Number Cycles/Number Instructions 
+    print("CPI: ",clockCycle / intructionAmu," Cycles/Instruction") # Number Cycles/Number Instructions 
     #TotalBlocks = 32768 
     #Overhead = 17
     #impKB = 580
     #cost = 29
-    unusedKB = ( (int(TotalBlocks)-invalid) * (((int(blockSize)*8)+int(Overhead)) / 8) ) / 1024
+    unusedKB = ( (int(TotalBlocks)-compulsory) * (((int(blockSize)*8)+int(Overhead)) / 8) ) / 1024
     # The 1024 KB below is the total cache size for this example
     # Waste = COST/KB * Unused KB 
     percentage = (unusedKB / impKB)*100
     print("Unused Cache Space: %.2f"% unusedKB," KB / %.2f"% impKB," KB = %.2f"%percentage,"%"," Waste: $%.2f"% round((cost/impKB *float(unusedKB)),2) )
-    print("Unused Cache Blocks: ",(int(TotalBlocks)-invalid)," / ", TotalBlocks)  
+    print("Unused Cache Blocks: ",(int(TotalBlocks)-compulsory)," / ", TotalBlocks)  
 
 
 
@@ -370,7 +397,7 @@ def trace_work(file_name, associativityInput):
     try:
         
         with open(file_name, "r") as trace_file:
-
+            eip = 0
             length = ""
             address = ""
             dst1 = 0
@@ -378,7 +405,7 @@ def trace_work(file_name, associativityInput):
             checker = 0
             instLenREDO = 0
             # will change to 0 when there are actual numb being returned
-            intructionAmu = 1
+            instructionAmu = 0
             addressAmu = 1 
             valid = 1
             invalid = 1 
@@ -392,8 +419,9 @@ def trace_work(file_name, associativityInput):
                     #you care about the length and the address
 
                 if "".join(split_line[0:1]) == "EIP":
+                    instructionAmu += 1
                     length =  "".join(split_line[1:2])
-                    len = int(length.replace('(','').replace(')','').replace(':',''))
+                    eip = int(length.replace('(','').replace(')','').replace(':',''))
                     add = hex(int("".join(split_line[2:3]),16))
                 
                 #second line the data access line shows addresses for destination memory “dstM” (i.e. the write address) and source memory
@@ -419,22 +447,19 @@ def trace_work(file_name, associativityInput):
                     if dst1 == 0:
                         instLenREDO = len
                         checker = 1
-                        intructionAmu += 1
                     #NEW!!!!
                     #ONCE WE FINISH READING THE SECOND LINE, WE NOW CALL CACHEWORK 
-                    add, val, inval, tagM = CacheWork(len, add, dst1, src1, associativityInput, instLenREDO)
+                    add, val, inval, tagM = CacheWork(eip, add, dst1, src1, associativityInput, instLenREDO)
                     addressAmu+= add 
                     valid += val 
                     invalid += inval 
                     tagMiss += tagM
-                    #instLenREDO = 0
                     checker = 0
 
 
         #close the file once we have fully went through it
         trace_file.close()
-        cacheCalc2(addressAmu, valid, invalid, tagMiss, intructionAmu)
-        #cacheCalc2(int(282168), int(275489), int(6656), int(23), int(10))
+        cacheCalc2(addressAmu, valid,(addressAmu-valid), invalid, tagMiss, instructionAmu)
 
     except IOError:
         print('Error opening file or file does not exist')
